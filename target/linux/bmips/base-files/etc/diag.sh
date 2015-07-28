@@ -11,6 +11,9 @@ get_status_led() {
 	"ar-5381u")
 		status_led="AR-5381u:green:power"
 		;;
+	"ar-5387un")
+		status_led="AR-5387un:green:power"
+		;;
 	"hg520v")
 		status_led="HG520v:green:net"
 		;;

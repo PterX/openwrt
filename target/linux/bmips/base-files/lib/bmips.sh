@@ -16,6 +16,9 @@ bmips_board_detect() {
 	*"Comtrend AR-5381u")
 		name="ar-5381u"
 		;;
+	*"Comtrend AR-5387un")
+		name="ar-5387un"
+		;;
 	*"Comtrend VG-8050")
 		name="vg-8050"
 		;;

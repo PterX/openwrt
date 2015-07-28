@@ -218,6 +218,8 @@ endef
 ### Devices ###
 # Comtrend AR-5381u
 $(eval $(call bcm63xxCfe,AR5381u,AR-5381u,ar-5381u,96328A-1241N,6328,--pad 8))
+# Comtrend AR-5387un
+$(eval $(call bcm63xxCfe,AR5387un,AR-5387un,ar-5387un,96328A-1441N1,6328,--pad 8))
 # Comtrend VG-8050
 $(eval $(call bcm63xxCfeRamdisk,VG8050,VG-8050,vg-8050,963169P-1861N5,63268))
 # Comtrend VR-3025u
@@ -234,6 +236,9 @@ $(eval $(call bcm63xxCfe,HG520v,HG520v,hg520v,HW6358GW_B,6358,--rsa-signature "E
 $(eval $(call bcm63xxCfe,HG556a_AB,HG556a_A,hg556a-a,HW556,6358,--rsa-signature "EchoLife_HG556a" --image-offset 0x20000 --block-size 0x10000 --tag-version 8))
 $(eval $(call bcm63xxCfe,HG556a_AB,HG556a_B,hg556a-b,HW556,6358,--rsa-signature "EchoLife_HG556a" --image-offset 0x20000 --block-size 0x20000 --tag-version 8))
 $(eval $(call bcm63xxCfe,HG556a_C,HG556a_C,hg556a-c,HW556,6358,--rsa-signature "EchoLife_HG556a" --image-offset 0x20000 --block-size 0x20000 --tag-version 8))
+# SFR Neufbox 4
+$(eval $(call bcm63xxCfe,Neufbox4,NEUFBOX4-SER,nb4-ser-r0,96358VW,6358,--rsa-signature "OpenWRT-$(REVISION)"))
+$(eval $(call bcm63xxCfe,Neufbox4,NEUFBOX4-FXC,nb4-fxc-r1,96358VW,6358,--rsa-signature "OpenWRT-$(REVISION)"))
 # Sagem F@ST1704
 $(eval $(call bcm63xxCfe,FAST1704,F@ST1704,fast1704,F@ST1704,6338))
 

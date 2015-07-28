@@ -75,7 +75,7 @@
 
 &leds0 {
 	status = "ok";
-	brcm,serial-leds;
+	brcm,clk-div = <1>;
 
 	alarm_white@0 {
 		reg = <0>;

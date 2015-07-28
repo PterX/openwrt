@@ -14,6 +14,15 @@ define Profile/AR5381u/Description
 endef
 $(eval $(call Profile,AR5381u))
 
+define Profile/AR5387un
+  NAME:=Comtrend AR-5387un
+  PACKAGES:=
+endef
+define Profile/AR5387un/Description
+  Package set optimized for AR-5387un.
+endef
+$(eval $(call Profile,AR5387un))
+
 define Profile/VG8050
   NAME:=Comtrend VG-8050
   PACKAGES:=
