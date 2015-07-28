@@ -1,0 +1,117 @@
+--- a/drivers/mtd/nand/brcmnand/brcmnand.c
++++ b/drivers/mtd/nand/brcmnand/brcmnand.c
+@@ -355,6 +355,13 @@ enum {
+ 	INTFC_CTLR_READY		= BIT(31),
+ };
+ 
++#define BRCMNAND_POLL_MASK		INTFC_OOB_VALID | \
++					INTFC_CACHE_VALID | \
++					INTFC_FLASH_READY | \
++					INTFC_CTLR_READY
++#define BRCMNAND_POLL_RETRIES	10000
++#define BRCMNAND_POLL_TIMOEUT	100
++
+ static inline u32 nand_readreg(struct brcmnand_controller *ctrl, u32 offs)
+ {
+ 	return brcmnand_readl(ctrl->nand_base + offs);
+@@ -1021,20 +1028,34 @@ static int brcmnand_waitfunc(struct mtd_
+ 	struct nand_chip *chip = mtd->priv;
+ 	struct brcmnand_host *host = chip->priv;
+ 	struct brcmnand_controller *ctrl = host->ctrl;
+-	unsigned long timeo = msecs_to_jiffies(100);
+ 
+ 	dev_dbg(ctrl->dev, "wait on native cmd %d\n", ctrl->cmd_pending);
+-	if (ctrl->cmd_pending &&
+-			wait_for_completion_timeout(&ctrl->done, timeo) <= 0) {
+-		u32 cmd = brcmnand_read_reg(ctrl, BRCMNAND_CMD_START)
+-					>> brcmnand_cmd_shift(ctrl);
+-
+-		dev_err_ratelimited(ctrl->dev,
+-			"timeout waiting for command %#02x\n", cmd);
+-		dev_err_ratelimited(ctrl->dev, "intfc status %08x\n",
+-			brcmnand_read_reg(ctrl, BRCMNAND_INTFC_STATUS));
++	if((int) ctrl->irq < 0) {
++		if (ctrl->cmd_pending) {
++			int i;
++			for (i = 0; i < BRCMNAND_POLL_RETRIES; i++) {
++				u32 ready = brcmnand_read_reg(ctrl, BRCMNAND_INTFC_STATUS);
++				if ((ready & BRCMNAND_POLL_MASK) == BRCMNAND_POLL_MASK)
++					break;
++				udelay(BRCMNAND_POLL_TIMOEUT);
++			}
++		}
++	} else {
++		unsigned long timeo = msecs_to_jiffies(100);
++
++		if (ctrl->cmd_pending &&
++				wait_for_completion_timeout(&ctrl->done, timeo) <= 0) {
++			u32 cmd = brcmnand_read_reg(ctrl, BRCMNAND_CMD_START)
++						>> brcmnand_cmd_shift(ctrl);
++
++			dev_err_ratelimited(ctrl->dev,
++				"timeout waiting for command %#02x\n", cmd);
++			dev_err_ratelimited(ctrl->dev, "intfc status %08x\n",
++				brcmnand_read_reg(ctrl, BRCMNAND_INTFC_STATUS));
++		}
+ 	}
+ 	ctrl->cmd_pending = 0;
++
+ 	return brcmnand_read_reg(ctrl, BRCMNAND_INTFC_STATUS) &
+ 				 INTFC_FLASH_STATUS;
+ }
+@@ -2170,32 +2191,31 @@ int brcmnand_probe(struct platform_devic
+ 	/* IRQ */
+ 	ctrl->irq = platform_get_irq(pdev, 0);
+ 	if ((int)ctrl->irq < 0) {
+-		dev_err(dev, "no IRQ defined\n");
+-		return -ENODEV;
+-	}
+-
+-	/*
+-	 * Some SoCs integrate this controller (e.g., its interrupt bits) in
+-	 * interesting ways
+-	 */
+-	if (soc) {
+-		ctrl->soc = soc;
++		dev_warn(dev, "no IRQ defined\n");
++	} else {
++		/*
++		 * Some SoCs integrate this controller (e.g., its interrupt bits) in
++		 * interesting ways
++		 */
++		if (soc) {
++			ctrl->soc = soc;
+ 
+-		ret = devm_request_irq(dev, ctrl->irq, brcmnand_irq, 0,
+-				       DRV_NAME, ctrl);
++			ret = devm_request_irq(dev, ctrl->irq, brcmnand_irq, 0,
++						   DRV_NAME, ctrl);
+ 
+-		/* Enable interrupt */
+-		ctrl->soc->ctlrdy_ack(ctrl->soc);
+-		ctrl->soc->ctlrdy_set_enabled(ctrl->soc, true);
+-	} else {
+-		/* Use standard interrupt infrastructure */
+-		ret = devm_request_irq(dev, ctrl->irq, brcmnand_ctlrdy_irq, 0,
+-				       DRV_NAME, ctrl);
+-	}
+-	if (ret < 0) {
+-		dev_err(dev, "can't allocate IRQ %d: error %d\n",
+-			ctrl->irq, ret);
+-		return ret;
++			/* Enable interrupt */
++			ctrl->soc->ctlrdy_ack(ctrl->soc);
++			ctrl->soc->ctlrdy_set_enabled(ctrl->soc, true);
++		} else {
++			/* Use standard interrupt infrastructure */
++			ret = devm_request_irq(dev, ctrl->irq, brcmnand_ctlrdy_irq, 0,
++						   DRV_NAME, ctrl);
++		}
++		if (ret < 0) {
++			dev_err(dev, "can't allocate IRQ %d: error %d\n",
++				ctrl->irq, ret);
++			return ret;
++		}
+ 	}
+ 
+ 	for_each_available_child_of_node(dn, child) {
