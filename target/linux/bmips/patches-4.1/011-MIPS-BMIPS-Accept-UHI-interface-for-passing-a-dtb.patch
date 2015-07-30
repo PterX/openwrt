@@ -1,0 +1,37 @@
+From ca668a2da4687f23e65ce630742b6784a5fca595 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Sun, 12 Apr 2015 12:25:01 +0200
+Subject: [PATCH] MIPS: BMIPS: Accept UHI interface for passing a dtb
+
+Detect and use passed dtb address using the UHI interface. This allows for
+booting with a vmlinux.bin appended dtb instead of using a built-in one.
+
+Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+Cc: linux-mips@linux-mips.org
+Cc: devicetree@vger.kernel.org
+Cc: John Crispin <blogic@openwrt.org>
+Cc: Kevin Cernekee <cernekee@gmail.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>
+Cc: Aaro Koskinen <aaro.koskinen@iki.fi>
+Cc: Markos Chandras <markos.chandras@imgtec.com>
+Cc: Andrew Bresticker <abrestic@chromium.org>
+Cc: Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
+Cc: Paul Burton <paul.burton@imgtec.com>
+Cc: James Hartley <James.Hartley@imgtec.com>
+Patchwork: https://patchwork.linux-mips.org/patch/9742/
+Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+---
+ arch/mips/bmips/setup.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/arch/mips/bmips/setup.c
++++ b/arch/mips/bmips/setup.c
+@@ -149,6 +149,8 @@ void __init plat_mem_setup(void)
+ 	/* intended to somewhat resemble ARM; see Documentation/arm/Booting */
+ 	if (fw_arg0 == 0 && fw_arg1 == 0xffffffff)
+ 		dtb = phys_to_virt(fw_arg2);
++	else if (fw_arg0 == -2) /* UHI interface */
++		dtb = (void *)fw_arg1;
+ 	else if (__dtb_start != __dtb_end)
+ 		dtb = (void *)__dtb_start;
+ 	else

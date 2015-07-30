@@ -1,0 +1,112 @@
+From 380e4270f53b1ce848de7c3c9f21c7d6ccab3d2e Mon Sep 17 00:00:00 2001
+From: Florian Fainelli <f.fainelli@gmail.com>
+Date: Mon, 4 May 2015 18:10:57 -0700
+Subject: [PATCH] MIPS: BMIPS: Add support for Broadcom BCM97435SVMB
+
+Add a DTS file and Kconfig entry for the BCM97435SVMB evaluation board
+using bcm7435.dtsi as an example.
+
+The current code needs some tweaking to allow us to use the
+dual-threaded dual BMIPS5200 CPUs, so for now we limit ourselves to
+allowing just a single CPU to be booted.
+
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+Cc: linux-mips@linux-mips.org
+Cc: blogic@openwrt.org
+Cc: cernekee@chromium.org
+Cc: Steven.Hill@imgtec.com
+Patchwork: https://patchwork.linux-mips.org/patch/9972/
+Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+---
+ arch/mips/bmips/Kconfig                  |  4 +++
+ arch/mips/boot/dts/brcm/Makefile         |  1 +
+ arch/mips/boot/dts/brcm/bcm97435svmb.dts | 60 ++++++++++++++++++++++++++++++++
+ 3 files changed, 65 insertions(+)
+ create mode 100644 arch/mips/boot/dts/brcm/bcm97435svmb.dts
+
+--- a/arch/mips/bmips/Kconfig
++++ b/arch/mips/bmips/Kconfig
+@@ -57,6 +57,10 @@ config DT_BCM97425SVMB
+ 	bool "BCM97425SVMB"
+ 	select BUILTIN_DTB
+ 
++config DT_BCM97435SVMB
++	bool "BCM97435SVMB"
++	select BUILTIN_DTB
++
+ endchoice
+ 
+ endif
+--- a/arch/mips/boot/dts/brcm/Makefile
++++ b/arch/mips/boot/dts/brcm/Makefile
+@@ -9,6 +9,7 @@ dtb-$(CONFIG_DT_BCM97360SVMB)		+= bcm973
+ dtb-$(CONFIG_DT_BCM97362SVMB)		+= bcm97362svmb.dtb
+ dtb-$(CONFIG_DT_BCM97420C)		+= bcm97420c.dtb
+ dtb-$(CONFIG_DT_BCM97425SVMB)		+= bcm97425svmb.dtb
++dtb-$(CONFIG_DT_BCM97435SVMB)		+= bcm97435svmb.dtb
+ 
+ dtb-$(CONFIG_DT_NONE)			+= \
+ 						bcm93384wvg.dtb		\
+--- /dev/null
++++ b/arch/mips/boot/dts/brcm/bcm97435svmb.dts
+@@ -0,0 +1,60 @@
++/dts-v1/;
++
++/include/ "bcm7435.dtsi"
++
++/ {
++	compatible = "brcm,bcm97435svmb", "brcm,bcm7435";
++	model = "Broadcom BCM97435SVMB";
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x00000000 0x10000000>,
++		      <0x20000000 0x30000000>,
++		      <0x90000000 0x40000000>;
++	};
++
++	chosen {
++		bootargs = "console=ttyS0,115200 maxcpus=1";
++		stdout-path = &uart0;
++	};
++};
++
++&uart0 {
++	status = "okay";
++};
++
++&enet0 {
++	status = "okay";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++&ehci2 {
++	status = "okay";
++};
++
++&ohci2 {
++	status = "okay";
++};
++
++&ehci3 {
++	status = "okay";
++};
++
++&ohci3 {
++	status = "okay";
++};
