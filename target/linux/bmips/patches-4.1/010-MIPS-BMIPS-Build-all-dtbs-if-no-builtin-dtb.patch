@@ -1,0 +1,48 @@
+From 0e12f4a3ab52f8be48c5ebbc556f53acb1afb280 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Sun, 12 Apr 2015 12:25:00 +0200
+Subject: [PATCH] MIPS: BMIPS: Build all dtbs if no builtin dtb
+
+Build all available dtbs to allow them to be appended to the resulting
+kernel in case there is no builtin dtb.
+
+Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+Cc: linux-mips@linux-mips.org
+Cc: devicetree@vger.kernel.org
+Cc: John Crispin <blogic@openwrt.org>
+Cc: Kevin Cernekee <cernekee@gmail.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>
+Cc: Aaro Koskinen <aaro.koskinen@iki.fi>
+Cc: Markos Chandras <markos.chandras@imgtec.com>
+Cc: Andrew Bresticker <abrestic@chromium.org>
+Cc: Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
+Cc: Paul Burton <paul.burton@imgtec.com>
+Cc: James Hartley <James.Hartley@imgtec.com>
+Patchwork: https://patchwork.linux-mips.org/patch/9740/
+Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+---
+ arch/mips/boot/dts/brcm/Makefile | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+--- a/arch/mips/boot/dts/brcm/Makefile
++++ b/arch/mips/boot/dts/brcm/Makefile
+@@ -10,6 +10,19 @@ dtb-$(CONFIG_DT_BCM97362SVMB)		+= bcm973
+ dtb-$(CONFIG_DT_BCM97420C)		+= bcm97420c.dtb
+ dtb-$(CONFIG_DT_BCM97425SVMB)		+= bcm97425svmb.dtb
+ 
++dtb-$(CONFIG_DT_NONE)			+= \
++						bcm93384wvg.dtb		\
++						bcm93384wvg_viper.dtb	\
++						bcm96368mvwg.dtb	\
++						bcm9ejtagprb.dtb	\
++						bcm97125cbmb.dtb	\
++						bcm97346dbsmb.dtb	\
++						bcm97358svmb.dtb	\
++						bcm97360svmb.dtb	\
++						bcm97362svmb.dtb	\
++						bcm97420c.dtb		\
++						bcm97425svmb.dtb
++
+ obj-y				+= $(patsubst %.dtb, %.dtb.o, $(dtb-y))
+ 
+ # Force kbuild to make empty built-in.o if necessary

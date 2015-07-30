@@ -1,0 +1,26 @@
+From bcb83a19d3ac95fe3c0e79e942fb628120738853 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Sun, 17 May 2015 17:41:01 +0200
+Subject: [PATCH] mtd: brcmnand: do not make local variable static
+
+Remove static in front of ctrl. This variable should not be shared
+between different instances of brcmnand_probe(), it should be local to
+this function and stored on the stack.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+---
+ drivers/mtd/nand/brcmnand/brcmnand.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/mtd/nand/brcmnand/brcmnand.c
++++ b/drivers/mtd/nand/brcmnand/brcmnand.c
+@@ -2069,7 +2069,7 @@ int brcmnand_probe(struct platform_devic
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *dn = dev->of_node, *child;
+-	static struct brcmnand_controller *ctrl;
++	struct brcmnand_controller *ctrl;
+ 	struct resource *res;
+ 	int ret;
+ 

@@ -1,0 +1,21 @@
+From 5e65d48b6049e090fdc57490db9d797124f2a9eb Mon Sep 17 00:00:00 2001
+From: Brian Norris <computersforpeace@gmail.com>
+Date: Thu, 28 May 2015 15:07:45 -0700
+Subject: [PATCH] mtd: brcmnand: drop unnecessary initialization
+
+Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+---
+ drivers/mtd/nand/brcmnand/brcmnand.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/mtd/nand/brcmnand/brcmnand.c
++++ b/drivers/mtd/nand/brcmnand/brcmnand.c
+@@ -1887,7 +1887,7 @@ static int brcmnand_init_cs(struct brcmn
+ 	struct platform_device *pdev = host->pdev;
+ 	struct mtd_info *mtd;
+ 	struct nand_chip *chip;
+-	int ret = 0;
++	int ret;
+ 	struct mtd_part_parser_data ppdata = { .of_node = dn };
+ 
+ 	ret = of_property_read_u32(dn, "reg", &host->cs);

@@ -1,0 +1,32 @@
+--- a/drivers/mtd/nand/brcmnand/brcmnand.h
++++ b/drivers/mtd/nand/brcmnand/brcmnand.h
+@@ -42,27 +42,12 @@ static inline void brcmnand_soc_data_bus
+ 
+ static inline u32 brcmnand_readl(void __iomem *addr)
+ {
+-	/*
+-	 * MIPS endianness is configured by boot strap, which also reverses all
+-	 * bus endianness (i.e., big-endian CPU + big endian bus ==> native
+-	 * endian I/O).
+-	 *
+-	 * Other architectures (e.g., ARM) either do not support big endian, or
+-	 * else leave I/O in little endian mode.
+-	 */
+-	if (IS_ENABLED(CONFIG_MIPS) && IS_ENABLED(__BIG_ENDIAN))
+-		return __raw_readl(addr);
+-	else
+-		return readl_relaxed(addr);
++	return __raw_readl(addr);
+ }
+ 
+ static inline void brcmnand_writel(u32 val, void __iomem *addr)
+ {
+-	/* See brcmnand_readl() comments */
+-	if (IS_ENABLED(CONFIG_MIPS) && IS_ENABLED(__BIG_ENDIAN))
+-		__raw_writel(val, addr);
+-	else
+-		writel_relaxed(val, addr);
++	__raw_writel(val, addr);
+ }
+ 
+ int brcmnand_probe(struct platform_device *pdev, struct brcmnand_soc *soc);

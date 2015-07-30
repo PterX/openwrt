@@ -1,0 +1,25 @@
+From 802041247a0abbeaf1dddb8a8d56f491762ae357 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Sun, 17 May 2015 17:41:00 +0200
+Subject: [PATCH] mtd: brcmnand: remove double new line from print
+
+The caller already adds a new line and in the other cases there is no
+new line added.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+---
+ drivers/mtd/nand/brcmnand/brcmnand.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/mtd/nand/brcmnand/brcmnand.c
++++ b/drivers/mtd/nand/brcmnand/brcmnand.c
+@@ -1765,7 +1765,7 @@ static void brcmnand_print_cfg(char *buf
+ 	else if (cfg->sector_size_1k)
+ 		sprintf(buf, ", BCH-%u (1KiB sector)", cfg->ecc_level << 1);
+ 	else
+-		sprintf(buf, ", BCH-%u\n", cfg->ecc_level);
++		sprintf(buf, ", BCH-%u", cfg->ecc_level);
+ }
+ 
+ /*

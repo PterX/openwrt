@@ -1,0 +1,106 @@
+From 7a4f726f42d600f526155d6c66b8c4e5a0feb5f6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=81lvaro=20Fern=C3=A1ndez=20Rojas?= <noltari@gmail.com>
+Date: Thu, 30 Jul 2015 08:38:33 +0200
+Subject: [PATCH] leds-bcm6328: add more configuration options and fix default
+ state initialization
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+---
+ .../devicetree/bindings/leds/leds-bcm6328.txt      |  8 +++++
+ drivers/leds/leds-bcm6328.c                        | 41 ++++++++++++++++------
+ 1 files changed, 30 insertions(+), 11 deletions(-)
+
+--- a/drivers/leds/leds-bcm6328.c
++++ b/drivers/leds/leds-bcm6328.c
+@@ -41,6 +41,11 @@
+ #define BCM6328_SERIAL_LED_SHIFT_DIR	BIT(16)
+ #define BCM6328_LED_SHIFT_TEST		BIT(30)
+ #define BCM6328_LED_TEST		BIT(31)
++#define BCM6328_INIT_MASK		(BCM6328_SERIAL_LED_EN | \
++					 BCM6328_SERIAL_LED_MUX  | \
++					 BCM6328_SERIAL_LED_CLK_NPOL | \
++					 BCM6328_SERIAL_LED_DATA_PPOL | \
++					 BCM6328_SERIAL_LED_SHIFT_DIR)
+ 
+ #define BCM6328_LED_MODE_MASK		3
+ #define BCM6328_LED_MODE_OFF		0
+@@ -281,11 +286,10 @@ static int bcm6328_led(struct device *de
+ 						    "linux,default-trigger",
+ 						    NULL);
+ 
++	spin_lock_irqsave(lock, flags);
+ 	if (!of_property_read_string(nc, "default-state", &state)) {
+-		spin_lock_irqsave(lock, flags);
+ 		if (!strcmp(state, "on")) {
+ 			led->cdev.brightness = LED_FULL;
+-			bcm6328_led_mode(led, BCM6328_LED_MODE_ON);
+ 		} else if (!strcmp(state, "keep")) {
+ 			void __iomem *mode;
+ 			unsigned long val, shift;
+@@ -296,21 +300,28 @@ static int bcm6328_led(struct device *de
+ 			else
+ 				mode = mem + BCM6328_REG_MODE_LO;
+ 
+-			val = bcm6328_led_read(mode) >> (shift % 16);
++			val = bcm6328_led_read(mode) >>
++			      BCM6328_LED_SHIFT(shift % 16);
+ 			val &= BCM6328_LED_MODE_MASK;
+-			if (val == BCM6328_LED_MODE_ON)
++			if ((led->active_low && val == BCM6328_LED_MODE_ON) ||
++			    (!led->active_low && val == BCM6328_LED_MODE_OFF))
+ 				led->cdev.brightness = LED_FULL;
+-			else {
++			else
+ 				led->cdev.brightness = LED_OFF;
+-				bcm6328_led_mode(led, BCM6328_LED_MODE_OFF);
+-			}
+ 		} else {
+ 			led->cdev.brightness = LED_OFF;
+-			bcm6328_led_mode(led, BCM6328_LED_MODE_OFF);
+ 		}
+-		spin_unlock_irqrestore(lock, flags);
++	} else {
++		led->cdev.brightness = LED_OFF;
+ 	}
+ 
++	if ((led->active_low && led->cdev.brightness == LED_FULL) ||
++	    (!led->active_low && led->cdev.brightness == LED_OFF))
++		bcm6328_led_mode(led, BCM6328_LED_MODE_ON);
++	else
++		bcm6328_led_mode(led, BCM6328_LED_MODE_OFF);
++	spin_unlock_irqrestore(lock, flags);
++
+ 	led->cdev.brightness_set = bcm6328_led_set;
+ 	led->cdev.blink_set = bcm6328_blink_set;
+ 
+@@ -360,9 +371,17 @@ static int bcm6328_leds_probe(struct pla
+ 	bcm6328_led_write(mem + BCM6328_REG_LNKACTSEL_LO, 0);
+ 
+ 	val = bcm6328_led_read(mem + BCM6328_REG_INIT);
+-	val &= ~BCM6328_SERIAL_LED_EN;
++	val &= ~(BCM6328_INIT_MASK);
+ 	if (of_property_read_bool(np, "brcm,serial-leds"))
+ 		val |= BCM6328_SERIAL_LED_EN;
++	if (of_property_read_bool(np, "brcm,serial-mux"))
++		val |= BCM6328_SERIAL_LED_MUX;
++	if (of_property_read_bool(np, "brcm,serial-clk-low"))
++		val |= BCM6328_SERIAL_LED_CLK_NPOL;
++	if (!of_property_read_bool(np, "brcm,serial-dat-low"))
++		val |= BCM6328_SERIAL_LED_DATA_PPOL;
++	if (!of_property_read_bool(np, "brcm,serial-shift-inv"))
++		val |= BCM6328_SERIAL_LED_SHIFT_DIR;
+ 	bcm6328_led_write(mem + BCM6328_REG_INIT, val);
+ 
+ 	for_each_available_child_of_node(np, child) {
+@@ -373,7 +392,7 @@ static int bcm6328_leds_probe(struct pla
+ 			continue;
+ 
+ 		if (reg >= BCM6328_LED_MAX_COUNT) {
+-			dev_err(dev, "invalid LED (>= %d)\n",
++			dev_err(dev, "invalid LED (%u >= %d)\n", reg,
+ 				BCM6328_LED_MAX_COUNT);
+ 			continue;
+ 		}
